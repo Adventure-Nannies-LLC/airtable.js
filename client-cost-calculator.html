@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculate the true total annual cost of hiring a nanny or private educator — taxes, benefits, and agency fees included.">
+  <title>Employer Cost Calculator | Adventure Nannies</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:      #1B4F72;
+      --primary-dark: #154360;
+      --primary-bg:   #D6EAF8;
+      --employee:     #1E8449;
+      --employee-bg:  #D5F5E3;
+      --govt:         #A04000;
+      --govt-bg:      #FDEBD0;
+      --agency:       #7D3C98;
+      --agency-bg:    #F4ECF7;
+      --danger:       #C0392B;
+      --border:       #E2E8F0;
+      --bg:           #F7F9FC;
+      --card:         #FFFFFF;
+      --text:         #1A202C;
+      --muted:        #718096;
+      --radius:       10px;
+      --radius-sm:    6px;
+      --shadow:       0 1px 4px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.06);
+      --font:         'Segoe UI', system-ui, -apple-system, sans-serif;
+      --max-w:        700px;
+    }
+
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.5; min-height: 100vh; }
+
+    /* ── HEADER ── */
+    #page-header { background: var(--primary); padding: 18px 24px; }
+    .hdr-inner { max-width: var(--max-w); margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+    .logo { width: 44px; height: 44px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; letter-spacing: .05em; flex-shrink: 0; }
+    .brand-name { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .brand-sub { font-size: .8rem; color: rgba(255,255,255,.7); }
+
+    /* ── WRAPPER ── */
+    #app { max-width: var(--max-w); margin: 32px auto; padding: 0 16px 56px; }
+
+    /* ── CARD ── */
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; border: 1px solid var(--border); }
+    @media (max-width: 500px) { .card { padding: 22px 16px; } }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .fade-in { animation: fadeUp .3s ease forwards; }
+
+    /* ── TYPOGRAPHY ── */
+    .sec-title { font-size: 1.35rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .sec-sub   { font-size: .9rem; color: var(--muted); margin-bottom: 24px; }
+    .blk-label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 10px; }
+
+    /* ── FORMS ── */
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px; }
+    label { font-size: .875rem; font-weight: 600; }
+    .req  { color: var(--danger); margin-left: 2px; }
+    .hint { font-weight: 400; color: var(--muted); font-size: .8rem; }
+
+    input[type="number"], input[type="text"] {
+      width: 100%; padding: 10px 12px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 1rem; font-family: var(--font); color: var(--text); background: #fff;
+      transition: border-color .18s, box-shadow .18s; -webkit-appearance: none; appearance: none;
+    }
+    input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,79,114,.12); }
+    input.err-border { border-color: var(--danger) !important; }
+
+    .pfx-wrap { position: relative; }
+    .pfx-wrap .pfx { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .pfx-wrap input { padding-left: 22px; }
+
+    .field-err { font-size: .8rem; color: var(--danger); display: none; }
+
+    /* ── HIRE TYPE ── */
+    select {
+      width: 100%; padding: 10px 12px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 1rem; font-family: var(--font); color: var(--text); background: #fff;
+      transition: border-color .18s, box-shadow .18s; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23718096'%3E%3Cpath d='M4.5 6l3.5 3.5L11.5 6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
+      padding-right: 32px;
+    }
+    select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,79,114,.12); }
+    optgroup { font-weight: 700; color: var(--primary); }
+    option   { font-weight: 400; color: var(--text); }
+    .hire-fee-note { font-size: .8rem; color: var(--primary); font-weight: 600; }
+
+    /* ── ADVANCED ── */
+    details { margin-bottom: 20px; }
+    summary { font-size: .875rem; font-weight: 600; color: var(--primary); cursor: pointer; user-select: none; padding: 10px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: '▸'; transition: transform .18s; display: inline-block; }
+    details[open] summary::before { transform: rotate(90deg); }
+    .adv-inner { border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* ── BUTTONS ── */
+    .btn-primary { display: block; width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .18s; font-family: var(--font); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-sm { display: inline-flex; align-items: center; gap: 5px; padding: 9px 18px; background: transparent; color: var(--primary); border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: .875rem; font-weight: 600; cursor: pointer; transition: all .18s; font-family: var(--font); }
+    .btn-sm:hover { background: var(--bg); border-color: var(--primary); }
+    .btn-print { display: inline-flex; align-items: center; gap: 5px; padding: 9px 20px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); font-size: .875rem; font-weight: 700; cursor: pointer; font-family: var(--font); }
+
+    /* ── GATE ── */
+    .gate-back { background: none; border: none; color: var(--primary); font-size: .875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 20px; font-family: var(--font); padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+    #hs-wrap { min-height: 140px; }
+    .hs-loading { display: flex; align-items: center; justify-content: center; color: var(--muted); padding: 32px; font-size: .9rem; }
+    .hs-err { font-size: .9rem; color: var(--danger); text-align: center; padding: 24px; }
+
+    /* HubSpot overrides */
+    #hs-wrap .hs-form-field label { font-weight: 600 !important; font-size: .875rem !important; }
+    #hs-wrap .hs-form-field input[type="text"],
+    #hs-wrap .hs-form-field input[type="email"] { width:100% !important; border:1.5px solid var(--border) !important; border-radius:var(--radius-sm) !important; padding:10px 12px !important; font-size:1rem !important; font-family:var(--font) !important; }
+    #hs-wrap .hs-button, #hs-wrap input[type="submit"] { background:var(--primary) !important; color:#fff !important; border:none !important; border-radius:var(--radius-sm) !important; padding:12px 24px !important; font-size:1rem !important; font-weight:700 !important; cursor:pointer !important; width:100% !important; font-family:var(--font) !important; }
+
+    /* ── RESULTS: RECIPIENT CARDS ── */
+    .r-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 480px) { .r-cards { grid-template-columns: 1fr; } }
+    .r-card { border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+    .r-card.emp { background: var(--employee-bg); border: 1.5px solid var(--employee); }
+    .r-card.gov { background: var(--govt-bg);     border: 1.5px solid var(--govt);     }
+    .r-card.agn { background: var(--agency-bg);   border: 1.5px solid var(--agency);   }
+    .r-card-lbl { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+    .emp .r-card-lbl { color: var(--employee); } .gov .r-card-lbl { color: var(--govt); } .agn .r-card-lbl { color: var(--agency); }
+    .r-card-amt { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
+    .emp .r-card-amt { color: var(--employee); } .gov .r-card-amt { color: var(--govt); } .agn .r-card-amt { color: var(--agency); }
+    .r-card-note { font-size: .7rem; color: var(--muted); margin-top: 3px; }
+
+    /* ── TOTALS ── */
+    .totals-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    @media (max-width: 400px) { .totals-row { grid-template-columns: 1fr; } }
+    .total-box { border-radius: var(--radius-sm); padding: 18px; }
+    .total-box.yr1 { background: var(--primary); color: #fff; }
+    .total-box.yr2 { background: var(--bg); border: 1.5px solid var(--border); }
+    .total-box-lbl { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; opacity: .8; }
+    .yr2 .total-box-lbl { color: var(--muted); opacity: 1; }
+    .total-box-amt { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+    .yr2 .total-box-amt { color: var(--text); }
+    .total-box-note { font-size: .73rem; margin-top: 4px; opacity: .75; }
+    .yr2 .total-box-note { color: var(--muted); }
+
+    /* ── BREAKDOWN TABLE ── */
+    .section-badge { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; padding: 4px 10px; border-radius: 4px; margin: 16px 0 6px; }
+    .badge-ongoing { background: var(--primary-bg); color: var(--primary); }
+    .badge-onetime { background: var(--agency-bg);  color: var(--agency); }
+
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    thead th { text-align: left; padding: 8px 10px; font-size: .73rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 2px solid var(--border); }
+    thead th.r { text-align: right; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: var(--bg); }
+    td { padding: 9px 10px; vertical-align: middle; }
+    td.r { text-align: right; font-weight: 600; }
+    tfoot td { font-weight: 700; padding: 11px 10px; border-top: 2px solid var(--primary); }
+    tfoot td.r { font-size: 1.05rem; color: var(--primary); }
+
+    .pill { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+    .pill.employee  { background: var(--employee-bg); color: var(--employee); }
+    .pill.government{ background: var(--govt-bg);     color: var(--govt);     }
+    .pill.agency    { background: var(--agency-bg);   color: var(--agency);   }
+    .ot-badge { display: inline-block; font-size: .66rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--agency-bg); color: var(--agency); margin-left: 6px; vertical-align: middle; }
+
+    /* ── BAR CHART ── */
+    .chart-scroll { overflow-x: auto; margin-bottom: 28px; }
+
+    /* ── BENEFITS ── */
+    .ben-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+    @media (max-width: 440px) { .ben-grid { grid-template-columns: 1fr; } }
+    .ben-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+    .ben-lbl { font-size: .73rem; color: var(--muted); margin-bottom: 4px; }
+    .ben-amt { font-size: 1rem; font-weight: 700; color: var(--employee); }
+
+    /* ── MISC ── */
+    .divider { height: 1px; background: var(--border); margin: 24px 0; }
+    .inputs-used { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 13px; font-size: .78rem; color: var(--muted); margin-bottom: 18px; }
+    .disclaimer { background: #FFFBEB; border: 1px solid #F6E05E; border-radius: var(--radius-sm); padding: 14px; font-size: .76rem; color: #744210; line-height: 1.6; margin-bottom: 22px; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .state-ok { font-size: .8rem; color: var(--employee); font-weight: 600; display: none; margin-top: 4px; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; }
+      #page-header { background: white !important; border-bottom: 2px solid #ccc; }
+      .brand-name, .brand-sub { color: #000 !important; }
+      .logo { background: var(--primary) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #calc-section, #gate-section, .action-row { display: none !important; }
+      #results-section { display: block !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+      .r-card, .total-box, .ben-item { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<header id="page-header">
+  <div class="hdr-inner">
+    <div class="logo">AN</div>
+    <div>
+      <div class="brand-name">Adventure Nannies</div>
+      <div class="brand-sub">Employer Cost Calculator</div>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ══ SECTION 1: INPUTS ══ -->
+  <section id="calc-section" class="card">
+    <h1 class="sec-title">Estimate Your Total Employer Cost</h1>
+    <p class="sec-sub">Enter the candidate's hourly rate and your location to see a full annual cost breakdown — including taxes, benefits, and our placement fee.</p>
+
+    <form id="calc-form" novalidate>
+
+      <div class="field">
+        <label for="f-hire">Type of Search <span class="req">*</span></label>
+        <select id="f-hire">
+          <optgroup label="Standard Placement — 25% fee">
+            <option value="Long Term Nanny" selected>Long-Term Nanny</option>
+            <option value="Short Term Nanny (90-365 days)">Short-Term Nanny (90–365 days)</option>
+            <option value="Travel / Temporary Nanny">Temporary or Travel Nanny</option>
+            <option value="Household Manager">Household Manager</option>
+            <option value="Family Assistant">Family Assistant</option>
+          </optgroup>
+          <optgroup label="Specialized Search — 30% fee">
+            <option value="Private Educator">Private Educator</option>
+            <option value="Newborn Care Specialist">Newborn Care Specialist</option>
+            <option value="Rotational Nanny/Team">Rotational Nanny / Team</option>
+          </optgroup>
+        </select>
+        <span class="hire-fee-note" id="hire-fee-note"></span>
+        <span class="field-err" id="err-hire"></span>
+      </div>
+
+      <div class="field">
+        <label for="f-rate">Candidate Hourly Rate <span class="req">*</span> <span class="hint">(minimum $35/hr)</span></label>
+        <div class="pfx-wrap">
+          <span class="pfx">$</span>
+          <input type="number" id="f-rate" placeholder="35.00" min="35" max="999" step="0.25">
+        </div>
+        <span class="field-err" id="err-rate"></span>
+      </div>
+
+      <div class="field">
+        <label for="f-hrs">Hours Per Week <span class="req">*</span></label>
+        <input type="number" id="f-hrs" placeholder="40" min="1" max="168" step="0.5">
+        <span class="field-err" id="err-hrs"></span>
+      </div>
+
+      <div class="field">
+        <label for="f-zip">Your ZIP Code <span class="req">*</span> <span class="hint">(determines state taxes)</span></label>
+        <input type="text" id="f-zip" placeholder="e.g. 10001" maxlength="5" inputmode="numeric" pattern="[0-9]{5}">
+        <span class="field-err" id="err-zip"></span>
+        <span class="state-ok" id="state-ok"></span>
+      </div>
+
+      <details>
+        <summary>Advanced Options</summary>
+        <div class="adv-inner">
+          <div class="field">
+            <label for="f-pto">Paid Vacation Weeks <span class="hint">(default: 2)</span></label>
+            <input type="number" id="f-pto" value="2" min="0" max="52" step="0.5">
+          </div>
+          <div class="field">
+            <label for="f-sick">Paid Sick Days per Year <span class="hint">(default: 5)</span></label>
+            <input type="number" id="f-sick" value="5" min="0" max="60">
+          </div>
+          <div class="field">
+            <label for="f-health">Monthly Health Stipend <span class="hint">(default: $0)</span></label>
+            <div class="pfx-wrap">
+              <span class="pfx">$</span>
+              <input type="number" id="f-health" value="0" min="0" max="5000" step="50">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <button type="submit" class="btn-primary">Calculate My Costs →</button>
+    </form>
+  </section>
+
+  <!-- ══ SECTION 2: HUBSPOT GATE ══ -->
+  <section id="gate-section" class="card" style="display:none">
+    <button class="gate-back" id="btn-back">← Edit my numbers</button>
+    <h2 class="sec-title">Your estimate is ready!</h2>
+    <p class="sec-sub">Enter your name and email to unlock your full cost breakdown. We'll also send you a copy for your records.</p>
+    <div id="hs-wrap">
+      <div class="hs-loading">Loading form…</div>
+    </div>
+  </section>
+
+  <!-- ══ SECTION 3: RESULTS ══ -->
+  <section id="results-section" class="card" style="display:none">
+    <h2 class="sec-title">Your Estimated Employer Cost</h2>
+    <p id="r-meta" style="font-size:.85rem;color:var(--muted);margin-bottom:20px;"></p>
+
+    <p class="blk-label">Where Your Money Goes</p>
+    <div class="r-cards">
+      <div class="r-card emp">
+        <div class="r-card-lbl">To Employee</div>
+        <div class="r-card-amt" id="rc-emp"></div>
+        <div class="r-card-note">wages + benefits · annual</div>
+      </div>
+      <div class="r-card gov">
+        <div class="r-card-lbl">To Government</div>
+        <div class="r-card-amt" id="rc-gov"></div>
+        <div class="r-card-note">federal + state taxes · annual</div>
+      </div>
+      <div class="r-card agn">
+        <div class="r-card-lbl">To Agency</div>
+        <div class="r-card-amt" id="rc-agn"></div>
+        <div class="r-card-note">placement fee · one-time</div>
+      </div>
+    </div>
+
+    <div class="totals-row">
+      <div class="total-box yr1">
+        <div class="total-box-lbl">First-Year Total Cost</div>
+        <div class="total-box-amt" id="t-yr1"></div>
+        <div class="total-box-note">includes one-time agency placement fee</div>
+      </div>
+      <div class="total-box yr2">
+        <div class="total-box-lbl">Year 2+ Annual Cost</div>
+        <div class="total-box-amt" id="t-yr2"></div>
+        <div class="total-box-note">ongoing · no agency fee</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <p class="blk-label">Cost Visualization</p>
+    <div class="chart-scroll">
+      <svg id="cost-svg" width="100%" role="img" aria-label="Cost breakdown chart"></svg>
+    </div>
+
+    <div class="divider"></div>
+    <p class="blk-label">Full Cost Breakdown</p>
+
+    <div class="section-badge badge-ongoing">📅 Ongoing Annual Costs</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th class="r">Annual Amount</th>
+          <th class="r">% of Yr 1</th>
+          <th>Goes To</th>
+        </tr>
+      </thead>
+      <tbody id="t-ongoing"></tbody>
+      <tfoot>
+        <tr>
+          <td>Annual Subtotal</td>
+          <td class="r" id="t-ongoing-sub"></td>
+          <td class="r" id="t-ongoing-pct"></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="section-badge badge-onetime">⚑ One-Time Cost</div>
+    <table>
+      <tbody id="t-onetime"></tbody>
+    </table>
+
+    <table style="margin-top:8px">
+      <tfoot>
+        <tr>
+          <td style="font-size:1rem">First-Year Total</td>
+          <td class="r" id="t-grand"></td>
+          <td></td><td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="divider"></div>
+    <p class="blk-label">Benefits Package Value <span style="font-weight:400;text-transform:none;letter-spacing:0">(included in wages above)</span></p>
+    <div class="ben-grid">
+      <div class="ben-item"><div class="ben-lbl">Paid Vacation</div><div class="ben-amt" id="b-pto"></div></div>
+      <div class="ben-item"><div class="ben-lbl">Paid Sick Days</div><div class="ben-amt" id="b-sick"></div></div>
+      <div class="ben-item"><div class="ben-lbl">Annual Health Stipend</div><div class="ben-amt" id="b-health"></div></div>
+    </div>
+
+    <div class="inputs-used" id="r-inputs"></div>
+
+    <div class="disclaimer">
+      <strong>Disclaimer:</strong> This calculator provides estimates for informational purposes only and does not constitute legal, tax, or financial advice. Tax rates reflect 2024–2025 new-employer defaults and may differ based on your specific situation or changes in law. Workers' compensation rates are illustrative estimates; actual premiums vary by insurer and job classification. Social Security wage base is $168,600 (2024). FUTA rate (0.6%) assumes your state has not received a federal unemployment loan credit reduction. Agency fees reflect Adventure Nannies' standard placement fee structure. Please consult a licensed payroll provider or tax professional for precise obligations.
+    </div>
+
+    <div class="action-row">
+      <button class="btn-print" onclick="window.print()">🖨 Print / Save PDF</button>
+      <button class="btn-sm" id="btn-restart">↩ Start Over</button>
+    </div>
+  </section>
+
+</main>
+
+<!--
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DEVELOPER SETUP — replace the two constants below
+
+  HUBSPOT_PORTAL_ID:
+    HubSpot → Settings → Account Setup
+    (appears in your browser URL: /portal/XXXXXXXX)
+
+  HUBSPOT_FORM_ID:
+    HubSpot → Marketing → Forms → [Your Form]
+    → Actions → Share → Embed Code → formId value
+
+  VISIBLE FORM FIELDS (required):
+    firstname, lastname, email
+
+  HIDDEN FORM FIELDS — add each to the form, set type to Hidden.
+  The calculator fills these in automatically before submit.
+
+    Already in your portal:
+      anticipated_hourly_rate   Anticipated Hourly Rate      (number)
+      search_type               Search Type                  (dropdown)
+      zip                       Postal Code                  (text)
+      state                     State/Region                 (text)
+      high_value_lead           High Value Lead              (checkbox)
+
+    Create these first (Settings → Properties → Create property,
+    object = Contact):
+      calc_hours_per_week       Calculator — Hours Per Week      (number)
+      calc_gross_annual_wages   Calculator — Gross Annual Wages  (number)
+      calc_agency_fee           Calculator — Estimated Agency Fee(number)
+      calc_first_year_total     Calculator — First-Year Total    (number)
+      calc_ongoing_annual       Calculator — Year 2+ Annual Cost (number)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+<script>
+(function () {
+  'use strict';
+
+  /* ── CONFIG ── */
+  var HS_PORTAL = '244862032';
+  var HS_FORM   = 'c8989759-617c-4855-8fca-55083b6059d4';
+  var HS_REGION = 'na2';
+
+  /* ── FEDERAL CONSTANTS (2024) ── */
+  var SS_BASE    = 168600;
+  var SS_RATE    = 0.062;
+  var MED_RATE   = 0.0145;
+  var FUTA_RATE  = 0.006;
+  var FUTA_BASE  = 7000;
+
+  /* ── HIRE TYPES ──
+     Keys are the exact `search_type` values in HubSpot, so the selected
+     key writes straight through to the CRM with no translation layer. */
+  var HIRE = {
+    'Long Term Nanny':                { label: 'Long-Term Nanny',                fee: 0.25 },
+    'Short Term Nanny (90-365 days)': { label: 'Short-Term Nanny (90–365 days)', fee: 0.25 },
+    'Travel / Temporary Nanny':       { label: 'Temporary or Travel Nanny',      fee: 0.25 },
+    'Household Manager':              { label: 'Household Manager',              fee: 0.25 },
+    'Family Assistant':               { label: 'Family Assistant',               fee: 0.25 },
+    'Private Educator':               { label: 'Private Educator',               fee: 0.30 },
+    'Newborn Care Specialist':        { label: 'Newborn Care Specialist',        fee: 0.30 },
+    'Rotational Nanny/Team':          { label: 'Rotational Nanny / Team',        fee: 0.30 },
+  };
+
+  /* ── ZIP3 → STATE ── */
+  var Z = {
+    '005':'MA','010':'MA','011':'MA','012':'MA','013':'MA','014':'MA','015':'MA','016':'MA','017':'MA','018':'MA','019':'MA',
+    '020':'MA','021':'MA','022':'MA','023':'MA','024':'MA','025':'MA','026':'MA','027':'MA',
+    '028':'RI','029':'RI',
+    '030':'NH','031':'NH','032':'NH','033':'NH','034':'NH','035':'NH','036':'NH','037':'NH','038':'NH',
+    '039':'ME','040':'ME','041':'ME','042':'ME','043':'ME','044':'ME','045':'ME','046':'ME','047':'ME','048':'ME','049':'ME',
+    '050':'VT','051':'VT','052':'VT','053':'VT','054':'VT','055':'VT','056':'VT','057':'VT','058':'VT','059':'VT',
+    '060':'CT','061':'CT','062':'CT','063':'CT','064':'CT','065':'CT','066':'CT','067':'CT','068':'CT','069':'CT',
+    '070':'NJ','071':'NJ','072':'NJ','073':'NJ','074':'NJ','075':'NJ','076':'NJ','077':'NJ','078':'NJ','079':'NJ',
+    '080':'NJ','081':'NJ','082':'NJ','083':'NJ','084':'NJ','085':'NJ','086':'NJ','087':'NJ','088':'NJ','089':'NJ',
+    '100':'NY','101':'NY','102':'NY','103':'NY','104':'NY','105':'NY','106':'NY','107':'NY','108':'NY','109':'NY',
+    '110':'NY','111':'NY','112':'NY','113':'NY','114':'NY','115':'NY','116':'NY','117':'NY','118':'NY','119':'NY',
+    '120':'NY','121':'NY','122':'NY','123':'NY','124':'NY','125':'NY','126':'NY','127':'NY','128':'NY','129':'NY',
+    '130':'NY','131':'NY','132':'NY','133':'NY','134':'NY','135':'NY','136':'NY','137':'NY','138':'NY','139':'NY',
+    '140':'NY','141':'NY','142':'NY','143':'NY','144':'NY','145':'NY','146':'NY','147':'NY','148':'NY','149':'NY',
+    '150':'PA','151':'PA','152':'PA','153':'PA','154':'PA','155':'PA','156':'PA','157':'PA','158':'PA','159':'PA',
+    '160':'PA','161':'PA','162':'PA','163':'PA','164':'PA','165':'PA','166':'PA','167':'PA','168':'PA','169':'PA',
+    '170':'PA','171':'PA','172':'PA','173':'PA','174':'PA','175':'PA','176':'PA','177':'PA','178':'PA','179':'PA',
+    '180':'PA','181':'PA','182':'PA','183':'PA','184':'PA','185':'PA','186':'PA','187':'PA','188':'PA','189':'PA',
+    '190':'PA','191':'PA','192':'PA','193':'PA','194':'PA','195':'PA','196':'PA',
+    '197':'DE','198':'DE','199':'DE',
+    '200':'DC','202':'DC','203':'DC','204':'DC','205':'DC',
+    '206':'MD','207':'MD','208':'MD','209':'MD','210':'MD','211':'MD','212':'MD','214':'MD','215':'MD','216':'MD','217':'MD','218':'MD','219':'MD',
+    '220':'VA','221':'VA','222':'VA','223':'VA','224':'VA','225':'VA','226':'VA','227':'VA','228':'VA','229':'VA',
+    '230':'VA','231':'VA','232':'VA','233':'VA','234':'VA','235':'VA','236':'VA','237':'VA','238':'VA','239':'VA',
+    '240':'VA','241':'VA','242':'VA','243':'VA','244':'VA','245':'VA','246':'VA',
+    '247':'WV','248':'WV','249':'WV','250':'WV','251':'WV','252':'WV','253':'WV','254':'WV','255':'WV','256':'WV',
+    '257':'WV','258':'WV','259':'WV','260':'WV','261':'WV','262':'WV','263':'WV','264':'WV','265':'WV','266':'WV','267':'WV','268':'WV',
+    '270':'NC','271':'NC','272':'NC','273':'NC','274':'NC','275':'NC','276':'NC','277':'NC','278':'NC','279':'NC',
+    '280':'NC','281':'NC','282':'NC','283':'NC','284':'NC','285':'NC','286':'NC','287':'NC','288':'NC','289':'NC',
+    '290':'SC','291':'SC','292':'SC','293':'SC','294':'SC','295':'SC','296':'SC','297':'SC','298':'SC','299':'SC',
+    '300':'GA','301':'GA','302':'GA','303':'GA','304':'GA','305':'GA','306':'GA','307':'GA','308':'GA','309':'GA',
+    '310':'GA','311':'GA','312':'GA','313':'GA','314':'GA','315':'GA','316':'GA','317':'GA','318':'GA','319':'GA','398':'GA','399':'GA',
+    '320':'FL','321':'FL','322':'FL','323':'FL','324':'FL','325':'FL','326':'FL','327':'FL','328':'FL','329':'FL',
+    '330':'FL','331':'FL','332':'FL','333':'FL','334':'FL','335':'FL','336':'FL','337':'FL','338':'FL','339':'FL',
+    '340':'FL','341':'FL','342':'FL','344':'FL','346':'FL','347':'FL','349':'FL',
+    '350':'AL','351':'AL','352':'AL','354':'AL','355':'AL','356':'AL','357':'AL','358':'AL','359':'AL',
+    '360':'AL','361':'AL','362':'AL','363':'AL','364':'AL','365':'AL','366':'AL','367':'AL','368':'AL','369':'AL',
+    '370':'TN','371':'TN','372':'TN','373':'TN','374':'TN','375':'TN','376':'TN','377':'TN','378':'TN','379':'TN',
+    '380':'TN','381':'TN','382':'TN','383':'TN','384':'TN','385':'TN',
+    '386':'MS','387':'MS','388':'MS','389':'MS','390':'MS','391':'MS','392':'MS','393':'MS','394':'MS','395':'MS','396':'MS','397':'MS',
+    '400':'KY','401':'KY','402':'KY','403':'KY','404':'KY','405':'KY','406':'KY','407':'KY','408':'KY','409':'KY',
+    '410':'KY','411':'KY','412':'KY','413':'KY','414':'KY','415':'KY','416':'KY','417':'KY','418':'KY',
+    '420':'KY','421':'KY','422':'KY','423':'KY','424':'KY','425':'KY','426':'KY','427':'KY',
+    '430':'OH','431':'OH','432':'OH','433':'OH','434':'OH','435':'OH','436':'OH','437':'OH','438':'OH','439':'OH',
+    '440':'OH','441':'OH','442':'OH','443':'OH','444':'OH','445':'OH','446':'OH','447':'OH','448':'OH','449':'OH',
+    '450':'OH','451':'OH','452':'OH','453':'OH','454':'OH','455':'OH','456':'OH','457':'OH','458':'OH',
+    '460':'IN','461':'IN','462':'IN','463':'IN','464':'IN','465':'IN','466':'IN','467':'IN','468':'IN','469':'IN',
+    '470':'IN','471':'IN','472':'IN','473':'IN','474':'IN','475':'IN','476':'IN','477':'IN','478':'IN','479':'IN',
+    '480':'MI','481':'MI','482':'MI','483':'MI','484':'MI','485':'MI','486':'MI','487':'MI','488':'MI','489':'MI',
+    '490':'MI','491':'MI','492':'MI','493':'MI','494':'MI','495':'MI','496':'MI','497':'MI','498':'MI','499':'MI',
+    '500':'IA','501':'IA','502':'IA','503':'IA','504':'IA','505':'IA','506':'IA','507':'IA','508':'IA','509':'IA',
+    '510':'IA','511':'IA','512':'IA','513':'IA','514':'IA','515':'IA','516':'IA',
+    '520':'IA','521':'IA','522':'IA','523':'IA','524':'IA','525':'IA','526':'IA','527':'IA','528':'IA',
+    '530':'WI','531':'WI','532':'WI','534':'WI','535':'WI','537':'WI','538':'WI','539':'WI',
+    '540':'WI','541':'WI','542':'WI','543':'WI','544':'WI','545':'WI','546':'WI','547':'WI','548':'WI','549':'WI',
+    '550':'MN','551':'MN','553':'MN','554':'MN','555':'MN','556':'MN','557':'MN','558':'MN','559':'MN',
+    '560':'MN','561':'MN','562':'MN','563':'MN','564':'MN','565':'MN','566':'MN','567':'MN',
+    '570':'SD','571':'SD','572':'SD','573':'SD','574':'SD','575':'SD','576':'SD','577':'SD',
+    '580':'ND','581':'ND','582':'ND','583':'ND','584':'ND','585':'ND','586':'ND','587':'ND','588':'ND',
+    '590':'MT','591':'MT','592':'MT','593':'MT','594':'MT','595':'MT','596':'MT','597':'MT','598':'MT','599':'MT',
+    '600':'IL','601':'IL','602':'IL','603':'IL','604':'IL','605':'IL','606':'IL','607':'IL','608':'IL','609':'IL',
+    '610':'IL','611':'IL','612':'IL','613':'IL','614':'IL','615':'IL','616':'IL','617':'IL','618':'IL','619':'IL',
+    '620':'IL','622':'IL','623':'IL','624':'IL','625':'IL','626':'IL','627':'IL','628':'IL','629':'IL',
+    '630':'MO','631':'MO','633':'MO','634':'MO','635':'MO','636':'MO','637':'MO','638':'MO','639':'MO',
+    '640':'MO','641':'MO','644':'MO','645':'MO','646':'MO','647':'MO','648':'MO','649':'MO',
+    '650':'MO','651':'MO','652':'MO','653':'MO','654':'MO','655':'MO','656':'MO','657':'MO','658':'MO',
+    '660':'KS','661':'KS','662':'KS','664':'KS','665':'KS','666':'KS','667':'KS','668':'KS','669':'KS',
+    '670':'KS','671':'KS','672':'KS','673':'KS','674':'KS','675':'KS','676':'KS','677':'KS','678':'KS','679':'KS',
+    '680':'NE','681':'NE','683':'NE','684':'NE','685':'NE','686':'NE','687':'NE','688':'NE','689':'NE',
+    '690':'NE','691':'NE','692':'NE','693':'NE',
+    '700':'LA','701':'LA','703':'LA','704':'LA','705':'LA','706':'LA','707':'LA','708':'LA',
+    '710':'LA','711':'LA','712':'LA','713':'LA','714':'LA',
+    '716':'AR','717':'AR','718':'AR','719':'AR','720':'AR','721':'AR','722':'AR','723':'AR','724':'AR',
+    '725':'AR','726':'AR','727':'AR','728':'AR','729':'AR',
+    '730':'OK','731':'OK','733':'OK','734':'OK','735':'OK','736':'OK','737':'OK','738':'OK','739':'OK',
+    '740':'OK','741':'OK','743':'OK','744':'OK','745':'OK','746':'OK','747':'OK','748':'OK','749':'OK',
+    '750':'TX','751':'TX','752':'TX','753':'TX','754':'TX','755':'TX','756':'TX','757':'TX','758':'TX','759':'TX',
+    '760':'TX','761':'TX','762':'TX','763':'TX','764':'TX','765':'TX','766':'TX','767':'TX','768':'TX','769':'TX',
+    '770':'TX','771':'TX','772':'TX','773':'TX','774':'TX','775':'TX','776':'TX','777':'TX','778':'TX','779':'TX',
+    '780':'TX','781':'TX','782':'TX','783':'TX','784':'TX','785':'TX','786':'TX','787':'TX','788':'TX','789':'TX',
+    '790':'TX','791':'TX','792':'TX','793':'TX','794':'TX','795':'TX','796':'TX','797':'TX','798':'TX','799':'TX','885':'TX',
+    '800':'CO','801':'CO','802':'CO','803':'CO','804':'CO','805':'CO','806':'CO','807':'CO','808':'CO','809':'CO',
+    '810':'CO','811':'CO','812':'CO','813':'CO','814':'CO','815':'CO','816':'CO',
+    '820':'WY','821':'WY','822':'WY','823':'WY','824':'WY','825':'WY','826':'WY','827':'WY','828':'WY','829':'WY','830':'WY','831':'WY',
+    '832':'ID','833':'ID','834':'ID','835':'ID','836':'ID','837':'ID','838':'ID',
+    '840':'UT','841':'UT','842':'UT','843':'UT','844':'UT','845':'UT','846':'UT','847':'UT',
+    '850':'AZ','851':'AZ','852':'AZ','853':'AZ','855':'AZ','856':'AZ','857':'AZ','859':'AZ','860':'AZ','863':'AZ','864':'AZ','865':'AZ',
+    '870':'NM','871':'NM','872':'NM','873':'NM','874':'NM','875':'NM','876':'NM','877':'NM','878':'NM','879':'NM',
+    '880':'NM','881':'NM','882':'NM','883':'NM','884':'NM',
+    '890':'NV','891':'NV','893':'NV','894':'NV','895':'NV','897':'NV','898':'NV',
+    '900':'CA','901':'CA','902':'CA','903':'CA','904':'CA','905':'CA','906':'CA','907':'CA','908':'CA',
+    '910':'CA','911':'CA','912':'CA','913':'CA','914':'CA','915':'CA','916':'CA','917':'CA','918':'CA','919':'CA',
+    '920':'CA','921':'CA','922':'CA','923':'CA','924':'CA','925':'CA','926':'CA','927':'CA','928':'CA',
+    '930':'CA','931':'CA','932':'CA','933':'CA','934':'CA','935':'CA','936':'CA','937':'CA','938':'CA','939':'CA',
+    '940':'CA','941':'CA','942':'CA','943':'CA','944':'CA','945':'CA','946':'CA','947':'CA','948':'CA','949':'CA',
+    '950':'CA','951':'CA','952':'CA','953':'CA','954':'CA','955':'CA','956':'CA','957':'CA','958':'CA','959':'CA',
+    '960':'CA','961':'CA',
+    '967':'HI','968':'HI',
+    '970':'OR','971':'OR','972':'OR','973':'OR','974':'OR','975':'OR','976':'OR','977':'OR','978':'OR','979':'OR',
+    '980':'WA','981':'WA','982':'WA','983':'WA','984':'WA','985':'WA','986':'WA','988':'WA','989':'WA',
+    '990':'WA','991':'WA','992':'WA','993':'WA','994':'WA',
+    '995':'AK','996':'AK','997':'AK','998':'AK','999':'AK',
+  };
+
+  /* ── STATE TAX DATA (2024–2025 new-employer rates) ── */
+  var ST = {
+    AL:{n:'Alabama',             sr:0.0270,sb: 8000, wc:0.0200},
+    AK:{n:'Alaska',              sr:0.0100,sb:47100, wc:0.0086},
+    AZ:{n:'Arizona',             sr:0.0200,sb: 8000, wc:0.0173},
+    AR:{n:'Arkansas',            sr:0.0310,sb:10000, wc:0.0154},
+    CA:{n:'California',          sr:0.0340,sb: 7000, wc:0.0220},
+    CO:{n:'Colorado',            sr:0.0170,sb:23800, wc:0.0156},
+    CT:{n:'Connecticut',         sr:0.0300,sb:25000, wc:0.0270},
+    DE:{n:'Delaware',            sr:0.0150,sb:10500, wc:0.0150},
+    DC:{n:'Washington D.C.',     sr:0.0270,sb: 9000, wc:0.0186},
+    FL:{n:'Florida',             sr:0.0270,sb: 7000, wc:0.0156},
+    GA:{n:'Georgia',             sr:0.0264,sb: 9500, wc:0.0126},
+    HI:{n:'Hawaii',              sr:0.0240,sb:56700, wc:0.0150},
+    ID:{n:'Idaho',               sr:0.0103,sb:53500, wc:0.0185},
+    IL:{n:'Illinois',            sr:0.0351,sb:13590, wc:0.0260},
+    IN:{n:'Indiana',             sr:0.0250,sb: 9500, wc:0.0110},
+    IA:{n:'Iowa',                sr:0.0100,sb:38200, wc:0.0170},
+    KS:{n:'Kansas',              sr:0.0270,sb:14000, wc:0.0150},
+    KY:{n:'Kentucky',            sr:0.0270,sb:11400, wc:0.0180},
+    LA:{n:'Louisiana',           sr:0.0188,sb: 7700, wc:0.0140},
+    ME:{n:'Maine',               sr:0.0220,sb:12000, wc:0.0196},
+    MD:{n:'Maryland',            sr:0.0230,sb: 8500, wc:0.0163},
+    MA:{n:'Massachusetts',       sr:0.0294,sb:15000, wc:0.0198},
+    MI:{n:'Michigan',            sr:0.0270,sb: 9500, wc:0.0175},
+    MN:{n:'Minnesota',           sr:0.0280,sb:42000, wc:0.0230},
+    MS:{n:'Mississippi',         sr:0.0100,sb:14000, wc:0.0160},
+    MO:{n:'Missouri',            sr:0.0220,sb:10500, wc:0.0150},
+    MT:{n:'Montana',             sr:0.0100,sb:43000, wc:0.0265},
+    NE:{n:'Nebraska',            sr:0.0125,sb: 9000, wc:0.0145},
+    NV:{n:'Nevada',              sr:0.0300,sb:40100, wc:0.0250},
+    NH:{n:'New Hampshire',       sr:0.0100,sb:14000, wc:0.0100},
+    NJ:{n:'New Jersey',          sr:0.0295,sb:42300, wc:0.0188},
+    NM:{n:'New Mexico',          sr:0.0100,sb:32400, wc:0.0152},
+    NY:{n:'New York',            sr:0.0341,sb:12800, wc:0.0185},
+    NC:{n:'North Carolina',      sr:0.0100,sb:31400, wc:0.0131},
+    ND:{n:'North Dakota',        sr:0.0110,sb:43800, wc:0.0130},
+    OH:{n:'Ohio',                sr:0.0270,sb: 9000, wc:0.0200},
+    OK:{n:'Oklahoma',            sr:0.0100,sb:27000, wc:0.0130},
+    OR:{n:'Oregon',              sr:0.0260,sb:52800, wc:0.0230},
+    PA:{n:'Pennsylvania',        sr:0.0387,sb:10000, wc:0.0210},
+    RI:{n:'Rhode Island',        sr:0.0190,sb:29200, wc:0.0148},
+    SC:{n:'South Carolina',      sr:0.0197,sb:14000, wc:0.0145},
+    SD:{n:'South Dakota',        sr:0.0120,sb:15000, wc:0.0152},
+    TN:{n:'Tennessee',           sr:0.0270,sb: 7000, wc:0.0120},
+    TX:{n:'Texas',               sr:0.0270,sb: 9000, wc:0.0163},
+    UT:{n:'Utah',                sr:0.0110,sb:47000, wc:0.0150},
+    VT:{n:'Vermont',             sr:0.0100,sb:14100, wc:0.0120},
+    VA:{n:'Virginia',            sr:0.0260,sb: 8000, wc:0.0137},
+    WA:{n:'Washington',          sr:0.0100,sb:68500, wc:0.0222},
+    WV:{n:'West Virginia',       sr:0.0270,sb: 9000, wc:0.0200},
+    WI:{n:'Wisconsin',           sr:0.0360,sb:14000, wc:0.0178},
+    WY:{n:'Wyoming',             sr:0.0270,sb:29100, wc:0.0080},
+  };
+
+  /* ── STATE ── */
+  var cached = null;
+  var hsLoaded = false;
+
+  /* ── UTILS ── */
+  function el(id) { return document.getElementById(id); }
+  function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function pctStr(n, total) { return total > 0 ? ((n / total) * 100).toFixed(1) + '%' : '—'; }
+  function stateOf(zip) { return Z[zip.substring(0, 3)] || null; }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function showErr(id, msg) { var e = el(id); e.textContent = msg; e.style.display = 'block'; }
+  function clearErr(id)     { var e = el(id); e.textContent = '';  e.style.display = 'none';  }
+
+  function show(id) {
+    ['calc-section','gate-section','results-section'].forEach(function(s) {
+      var node = el(s);
+      if (s === id) {
+        node.style.display = 'block';
+        node.classList.remove('fade-in');
+        void node.offsetWidth;
+        node.classList.add('fade-in');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        node.style.display = 'none';
+      }
+    });
+  }
+
+  /* ── VALIDATE ── */
+  function validate() {
+    var ok   = true;
+    var rate = parseFloat(el('f-rate').value);
+    var hrs  = parseFloat(el('f-hrs').value);
+    var zip  = el('f-zip').value.trim();
+
+    ['err-hire','err-rate','err-hrs','err-zip'].forEach(clearErr);
+
+    if (!HIRE[el('f-hire').value]) {
+      showErr('err-hire', 'Please select a type of search.'); ok = false;
+    }
+    if (isNaN(rate) || rate < 35)  { showErr('err-rate', 'Minimum rate is $35.00/hr.');            ok = false; }
+    else if (rate > 999)           { showErr('err-rate', 'Please enter a realistic rate (max $999).'); ok = false; }
+    if (isNaN(hrs) || hrs < 1)    { showErr('err-hrs',  'Please enter at least 1 hour per week.'); ok = false; }
+    else if (hrs > 168)            { showErr('err-hrs',  'Hours per week cannot exceed 168.');       ok = false; }
+    if (!/^\d{5}$/.test(zip))     { showErr('err-zip',  'Enter a valid 5-digit ZIP code.');         ok = false; }
+    else if (!stateOf(zip))        { showErr('err-zip',  "Couldn't identify state from that ZIP — please verify."); ok = false; }
+
+    return ok;
+  }
+
+  /* ── CALCULATE ── */
+  function calc(inp) {
+    var r  = inp.rate;
+    var h  = inp.hrs;
+    var sd = ST[inp.sc];
+    var ht = HIRE[inp.hireType];
+
+    var gross     = r * h * 52;
+    var ptoVal    = r * h * inp.pto;
+    var sickVal   = r * (h / 5) * inp.sick;
+    var hlthYear  = inp.health * 12;
+
+    var ssTax     = Math.min(gross, SS_BASE)   * SS_RATE;
+    var medTax    = gross                       * MED_RATE;
+    var futaTax   = Math.min(gross, FUTA_BASE) * FUTA_RATE;
+    var sutaTax   = Math.min(gross, sd.sb)     * sd.sr;
+    var wcTax     = gross * sd.wc;
+
+    var agencyFee = gross * ht.fee;
+    var toEmp     = gross + hlthYear;
+    var toGov     = ssTax + medTax + futaTax + sutaTax + wcTax;
+    var ongoing   = toEmp + toGov;
+    var yr1       = ongoing + agencyFee;
+
+    var rows = [
+      { lbl: 'Gross Annual Wages',                                                     amt: gross,    rec: 'employee',   cat: 'wages'   },
+      { lbl: 'Annual Health Stipend',                                                  amt: hlthYear, rec: 'employee',   cat: 'benefit' },
+      { lbl: 'Social Security (6.2%)',                                                 amt: ssTax,    rec: 'government', cat: 'federal' },
+      { lbl: 'Medicare (1.45%)',                                                       amt: medTax,   rec: 'government', cat: 'federal' },
+      { lbl: 'Federal Unemployment / FUTA (0.6% on first $' + FUTA_BASE.toLocaleString() + ')', amt: futaTax, rec: 'government', cat: 'federal' },
+      { lbl: sd.n + ' State Unemployment / SUTA (' + (sd.sr*100).toFixed(2) + '%)',   amt: sutaTax,  rec: 'government', cat: 'state'   },
+      { lbl: sd.n + " Workers' Comp (est. " + (sd.wc*100).toFixed(2) + '%)',          amt: wcTax,    rec: 'government', cat: 'state'   },
+    ];
+
+    var oneTime = [
+      { lbl: 'Agency Placement Fee — ' + ht.label + ' (' + Math.round(ht.fee * 100) + '% of gross salary)',
+        amt: agencyFee, rec: 'agency', cat: 'agency' },
+    ];
+
+    return { sd: sd, ht: ht, gross: gross, ptoVal: ptoVal, sickVal: sickVal, hlthYear: hlthYear,
+      toEmp: toEmp, toGov: toGov, agencyFee: agencyFee, ongoing: ongoing, yr1: yr1,
+      rows: rows, oneTime: oneTime, inp: inp };
+  }
+
+  /* ── RENDER ── */
+  function render(res) {
+    el('rc-emp').textContent = fmt(res.toEmp);
+    el('rc-gov').textContent = fmt(res.toGov);
+    el('rc-agn').textContent = fmt(res.agencyFee);
+    el('t-yr1').textContent  = fmt(res.yr1);
+    el('t-yr2').textContent  = fmt(res.ongoing);
+    el('r-meta').textContent = res.sd.n + '  ·  ' + res.ht.label
+      + '  ·  $' + res.inp.rate + '/hr × ' + res.inp.hrs + ' hrs/wk';
+
+    /* Ongoing table */
+    var tb = el('t-ongoing');
+    tb.innerHTML = '';
+    res.rows.forEach(function (row) {
+      if (row.amt === 0) return;
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + esc(row.lbl) + '</td>'
+        + '<td class="r">' + fmt(row.amt) + '</td>'
+        + '<td class="r">' + pctStr(row.amt, res.yr1) + '</td>'
+        + '<td><span class="pill ' + row.rec + '">' + cap(row.rec) + '</span></td>';
+      tb.appendChild(tr);
+    });
+    el('t-ongoing-sub').textContent = fmt(res.ongoing);
+    el('t-ongoing-pct').textContent = pctStr(res.ongoing, res.yr1);
+
+    /* One-time table */
+    var otb = el('t-onetime');
+    otb.innerHTML = '';
+    res.oneTime.forEach(function (row) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + esc(row.lbl) + '<span class="ot-badge">ONE-TIME</span></td>'
+        + '<td class="r">' + fmt(row.amt) + '</td>'
+        + '<td class="r">' + pctStr(row.amt, res.yr1) + '</td>'
+        + '<td><span class="pill ' + row.rec + '">' + cap(row.rec) + '</span></td>';
+      otb.appendChild(tr);
+    });
+
+    el('t-grand').textContent = fmt(res.yr1);
+
+    /* Benefits */
+    el('b-pto').textContent    = fmt(res.ptoVal);
+    el('b-sick').textContent   = fmt(res.sickVal);
+    el('b-health').textContent = fmt(res.hlthYear);
+
+    /* Inputs audit */
+    el('r-inputs').innerHTML = '<strong>Inputs used:</strong> '
+      + '$' + res.inp.rate + '/hr &bull; ' + res.inp.hrs + ' hrs/wk &bull; '
+      + 'ZIP ' + res.inp.zip + ' (' + res.sd.n + ') &bull; '
+      + res.inp.pto + ' PTO wks &bull; ' + res.inp.sick + ' sick days &bull; '
+      + '$' + res.inp.health + '/mo health &bull; ' + res.ht.label;
+
+    /* Chart */
+    drawChart(res);
+  }
+
+  /* ── SVG CHART ── */
+  function drawChart(res) {
+    var COLORS = { wages:'#1B4F72', benefit:'#1E8449', federal:'#E67E22', state:'#CA6F1E', agency:'#7D3C98' };
+    var allRows = res.rows.concat(res.oneTime).filter(function(r){ return r.amt > 0; });
+    var LW = 230, BW = 320, AW = 82, PAD = 14;
+    var TW = LW + BW + AW + PAD;
+    var BAR = 24, GAP = 8;
+    var TH = allRows.length * (BAR + GAP) + 10;
+    var svg = el('cost-svg');
+    var NS  = 'http://www.w3.org/2000/svg';
+    svg.innerHTML = '';
+    svg.setAttribute('viewBox', '0 0 ' + TW + ' ' + TH);
+    svg.setAttribute('height', TH);
+
+    allRows.forEach(function(row, i) {
+      var y    = i * (BAR + GAP) + 4;
+      var bw   = Math.max(3, (row.amt / res.yr1) * BW);
+      var col  = COLORS[row.cat] || '#aaa';
+      var lbl  = row.lbl.length > 36 ? row.lbl.substring(0, 34) + '…' : row.lbl;
+
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', LW - 6); t.setAttribute('y', y + BAR / 2 + 4);
+      t.setAttribute('text-anchor', 'end'); t.setAttribute('font-size', '11.5');
+      t.setAttribute('fill', '#4A5568'); t.setAttribute('font-family', 'Segoe UI,system-ui,sans-serif');
+      t.textContent = lbl;
+      svg.appendChild(t);
+
+      var rect = document.createElementNS(NS, 'rect');
+      rect.setAttribute('x', LW); rect.setAttribute('y', y);
+      rect.setAttribute('width', bw); rect.setAttribute('height', BAR);
+      rect.setAttribute('fill', col); rect.setAttribute('rx', '4');
+      svg.appendChild(rect);
+
+      var v = document.createElementNS(NS, 'text');
+      v.setAttribute('x', LW + bw + 5); v.setAttribute('y', y + BAR / 2 + 4);
+      v.setAttribute('font-size', '11'); v.setAttribute('fill', '#2D3748');
+      v.setAttribute('font-weight', '600'); v.setAttribute('font-family', 'Segoe UI,system-ui,sans-serif');
+      v.textContent = fmt(row.amt);
+      svg.appendChild(v);
+    });
+  }
+
+  /* ── HUBSPOT ── */
+  function loadHsForm() {
+    el('hs-wrap').innerHTML = '<div class="hs-loading">Loading form…</div>';
+    if (hsLoaded && window.hbspt) { createHsForm(); return; }
+    var s = document.createElement('script');
+    s.src = '//js.hsforms.net/forms/embed/v2.js';
+    s.charset = 'utf-8';
+    s.onload  = function() { hsLoaded = true; createHsForm(); };
+    s.onerror = function() {
+      el('hs-wrap').innerHTML = '<p class="hs-err">The form couldn\'t load. Please <a href="mailto:info@adventurenannies.com">email us</a> to receive your estimate.</p>';
+    };
+    document.head.appendChild(s);
+  }
+
+  /* Map calculated results onto HubSpot contact properties.
+     Keys are HubSpot internal property names. */
+  function hsFieldValues(res) {
+    return {
+      /* existing properties */
+      anticipated_hourly_rate: res.inp.rate,
+      search_type:             res.inp.hireType,
+      zip:                     res.inp.zip,
+      state:                   res.sd.n,
+      high_value_lead:         res.inp.rate > 45 ? 'true' : 'false',
+      /* new properties — see setup notes above */
+      calc_hours_per_week:     res.inp.hrs,
+      calc_gross_annual_wages: Math.round(res.gross),
+      calc_agency_fee:         Math.round(res.agencyFee),
+      calc_first_year_total:   Math.round(res.yr1),
+      calc_ongoing_annual:     Math.round(res.ongoing),
+    };
+  }
+
+  /* HubSpot's form fields are React-controlled: assigning .value directly is
+     silently discarded on submit. Go through the native setter, then fire the
+     events React listens for. */
+  function setHsField(formEl, name, value) {
+    var node = formEl.querySelector('[name="' + name + '"]');
+    if (!node) return false;
+    var proto  = node.tagName === 'SELECT' ? window.HTMLSelectElement : window.HTMLInputElement;
+    var setter = Object.getOwnPropertyDescriptor(proto.prototype, 'value');
+    if (setter && setter.set) { setter.set.call(node, value); }
+    else { node.value = value; }
+    node.dispatchEvent(new Event('input',  { bubbles: true }));
+    node.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  function createHsForm() {
+    el('hs-wrap').innerHTML = '';
+    window.hbspt.forms.create({
+      portalId: HS_PORTAL,
+      formId:   HS_FORM,
+      region:   HS_REGION,
+      target:   '#hs-wrap',
+
+      onFormReady: function (f) {
+        /* v2 has handed back a jQuery object in some releases, a DOM node in
+           others; fall back to querying the container. */
+        var formEl = (f && f.tagName) ? f : (f && f[0]) ? f[0] : el('hs-wrap').querySelector('form');
+        if (!formEl || !cached) return;
+
+        var vals = hsFieldValues(cached);
+        var wrote = [], missing = [];
+        Object.keys(vals).forEach(function (k) {
+          (setHsField(formEl, k, vals[k]) ? wrote : missing).push(k);
+        });
+
+        /* A property absent from the form is silently dropped on submit, which
+           looks identical to a working integration until someone checks the
+           contact record weeks later. Say so loudly instead. */
+        if (missing.length && window.console) {
+          console.warn(
+            '[cost-calculator] ' + missing.length + ' of ' + Object.keys(vals).length +
+            ' fields are NOT on HubSpot form ' + HS_FORM + ' — these values will be discarded:\n  ' +
+            missing.join('\n  ') +
+            '\n\nAdd each as a Hidden field in the HubSpot form editor.' +
+            (wrote.length ? '\n\nCapturing correctly: ' + wrote.join(', ') : '')
+          );
+        } else if (window.console) {
+          console.info('[cost-calculator] all ' + wrote.length + ' fields captured ✓');
+        }
+      },
+
+      onFormSubmitted: function () {
+        render(cached);
+        show('results-section');
+      },
+    });
+  }
+
+  /* ── INIT ── */
+  function init() {
+    /* Fee-tier live feedback */
+    function updateFeeNote() {
+      var ht = HIRE[el('f-hire').value];
+      el('hire-fee-note').textContent = ht
+        ? 'Placement fee: ' + Math.round(ht.fee * 100) + '% of gross annual salary'
+        : '';
+    }
+    el('f-hire').addEventListener('change', updateFeeNote);
+    updateFeeNote();
+
+    /* ZIP live feedback */
+    el('f-zip').addEventListener('input', function() {
+      var v = this.value.replace(/\D/g,'').slice(0,5);
+      this.value = v;
+      var ok = el('state-ok');
+      if (v.length >= 3) {
+        var sc = stateOf(v);
+        if (sc && ST[sc]) { ok.textContent = '✓ ' + ST[sc].n; ok.style.display = 'block'; }
+        else { ok.style.display = 'none'; }
+      } else { ok.style.display = 'none'; }
+    });
+
+    /* Form submit */
+    el('calc-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!validate()) return;
+      var zip = el('f-zip').value.trim();
+      cached = calc({
+        rate:     parseFloat(el('f-rate').value),
+        hrs:      parseFloat(el('f-hrs').value),
+        zip:      zip,
+        sc:       stateOf(zip),
+        hireType: el('f-hire').value,
+        pto:      parseFloat(el('f-pto').value)    || 2,
+        sick:     parseFloat(el('f-sick').value)   || 5,
+        health:   parseFloat(el('f-health').value) || 0,
+      });
+      show('gate-section');
+      loadHsForm();
+    });
+
+    /* Back */
+    el('btn-back').addEventListener('click', function() {
+      el('hs-wrap').innerHTML = '';
+      show('calc-section');
+    });
+
+    /* Start over */
+    el('btn-restart').addEventListener('click', function() {
+      cached = null;
+      el('hs-wrap').innerHTML = '';
+      el('state-ok').style.display = 'none';
+      ['err-hire','err-rate','err-hrs','err-zip'].forEach(clearErr);
+      show('calc-section');
+    });
+
+    show('calc-section');
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+})();
+</script>
+</body>
+</html>
